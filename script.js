@@ -1,0 +1,26 @@
+const header=document.querySelector('.site-header');
+const menuButton=document.querySelector('.menu-toggle');
+const nav=document.querySelector('.nav');
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+const updateScroll=()=>{const max=document.documentElement.scrollHeight-innerHeight;document.documentElement.style.setProperty('--scroll-progress',max>0?scrollY/max:0);header.classList.toggle('scrolled',scrollY>18)};
+let scrollQueued=false;
+window.addEventListener('scroll',()=>{if(scrollQueued)return;scrollQueued=true;requestAnimationFrame(()=>{updateScroll();scrollQueued=false})},{passive:true});
+window.addEventListener('load',()=>{updateScroll();requestAnimationFrame(()=>document.body.classList.add('page-ready'))},{once:true});
+const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+const setMenuOpen=open=>{nav.classList.toggle('open',open);document.body.classList.toggle('menu-open',open);menuButton.setAttribute('aria-expanded',open);menuButton.setAttribute('aria-label',open?'Menü schließen':'Menü öffnen')};
+menuButton.addEventListener('click',()=>setMenuOpen(!nav.classList.contains('open')));
+nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setMenuOpen(false)));
+document.addEventListener('keydown',event=>{if(event.key==='Escape')setMenuOpen(false)});
+const navLinks=[...nav.querySelectorAll('a[href^="#"]')];
+const navSections=navLinks.map(link=>document.querySelector(link.hash)).filter(Boolean);
+const activeNavObserver=new IntersectionObserver(entries=>{const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(!visible)return;navLinks.forEach(link=>link.toggleAttribute('aria-current',link.hash===`#${visible.target.id}`))},{rootMargin:'-18% 0px -62% 0px',threshold:[0,.2,.5]});
+navSections.forEach(section=>activeNavObserver.observe(section));
+document.querySelectorAll('.filters button').forEach(button=>button.addEventListener('click',()=>{document.querySelector('.filters .active').classList.remove('active');button.classList.add('active');const filter=button.dataset.filter;const galleryGrid=document.querySelector('.gallery-grid');document.querySelectorAll('.gallery-item').forEach(item=>{const hidden=filter!=='all'&&!item.dataset.category.includes(filter);item.classList.toggle('hidden',hidden);if(!hidden&&!reducedMotion.matches)item.animate([{opacity:.35,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,easing:'cubic-bezier(.16,1,.3,1)'})});galleryGrid.classList.toggle('filtered',filter!=='all');galleryGrid.dataset.visible=galleryGrid.querySelectorAll('.gallery-item:not(.hidden)').length}));
+const lightbox=document.querySelector('.lightbox');
+const lightboxImage=lightbox.querySelector('img');
+document.querySelectorAll('.gallery-item').forEach(item=>item.addEventListener('click',()=>{lightboxImage.src=item.dataset.full;lightboxImage.alt=item.querySelector('img').alt;lightbox.showModal()}));
+lightbox.querySelector('button').addEventListener('click',()=>lightbox.close());
+lightbox.addEventListener('click',event=>{if(event.target===lightbox)lightbox.close()});
+const heroVisual=document.querySelector('.hero-visual');
+if(heroVisual&&!reducedMotion.matches&&matchMedia('(pointer:fine)').matches){heroVisual.addEventListener('pointermove',event=>{const box=heroVisual.getBoundingClientRect();const x=((event.clientX-box.left)/box.width-.5)*10;const y=((event.clientY-box.top)/box.height-.5)*10;heroVisual.style.setProperty('--hero-x',`${x}px`);heroVisual.style.setProperty('--hero-y',`${y}px`)});heroVisual.addEventListener('pointerleave',()=>{heroVisual.style.setProperty('--hero-x','0px');heroVisual.style.setProperty('--hero-y','0px')})}
