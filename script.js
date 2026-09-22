@@ -22,5 +22,10 @@ const lightboxImage=lightbox.querySelector('img');
 document.querySelectorAll('.gallery-item').forEach(item=>item.addEventListener('click',()=>{lightboxImage.src=item.dataset.full;lightboxImage.alt=item.querySelector('img').alt;lightbox.showModal()}));
 lightbox.querySelector('button').addEventListener('click',()=>lightbox.close());
 lightbox.addEventListener('click',event=>{if(event.target===lightbox)lightbox.close()});
+const welcomePopup=document.querySelector('.welcome-popup');
+const closeWelcomePopup=()=>welcomePopup.close();
+welcomePopup.querySelector('.welcome-popup-close').addEventListener('click',closeWelcomePopup);
+welcomePopup.addEventListener('click',event=>{if(event.target!==welcomePopup)return;const box=welcomePopup.getBoundingClientRect();const outside=event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom;if(outside)closeWelcomePopup()});
+window.addEventListener('pageshow',()=>{if(!welcomePopup.open)welcomePopup.showModal()});
 const heroVisual=document.querySelector('.hero-visual');
 if(heroVisual&&!reducedMotion.matches&&matchMedia('(pointer:fine)').matches){heroVisual.addEventListener('pointermove',event=>{const box=heroVisual.getBoundingClientRect();const x=((event.clientX-box.left)/box.width-.5)*10;const y=((event.clientY-box.top)/box.height-.5)*10;heroVisual.style.setProperty('--hero-x',`${x}px`);heroVisual.style.setProperty('--hero-y',`${y}px`)});heroVisual.addEventListener('pointerleave',()=>{heroVisual.style.setProperty('--hero-x','0px');heroVisual.style.setProperty('--hero-y','0px')})}
